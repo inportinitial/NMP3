@@ -1,6 +1,7 @@
 #ifndef MP3PLAYERCOLUMN_H
 #define MP3PLAYERCOLUMN_H
 
+#include<qhotkey.h>
 #include<QWidget>
 #include<QString>
 #include<QFile>
@@ -9,7 +10,9 @@
 #include<QAudioOutput>
 #include<QVideoWidget>
 #include<list>
+#include<QSqlQuery>
 #include"../LyricsPlayer/lyricsplayer.h"
+#include"../../NVideoWidget/nvideowidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -25,7 +28,8 @@ public:
     ~MP3PlayerColumn();
     void AppendSongToPlayingList(const QString& song_path);
     void AppendSongsToPlayingList(std::list<QString> list);
-    void RemoveSongFromPlayingList(const QString& song_path);
+    void RemoveSongsFromPlayingList(std::list<QString>list);
+    void RemoveAllSongsFromPlayingList();
     void Pause();
     void Play();
     QString NowPlayingSongPath();
@@ -35,7 +39,9 @@ public:
     int Position();
     void ChangeVolumn(float v);
     void JumpToSong(QString song_path);
-    QVideoWidget* GetVideoWidget();
+    NVideoWidget* GetVideoWidget();
+    void ClickPauseOrPlay();
+    void _LoadSong(const QString& song_file_path);
 
 signals:
     void NowPlayingSongChanged();
@@ -53,27 +59,39 @@ private slots:
 
     void on_AdjustVolume_clicked();
 
+    void on_RandomCurrentPlayingList_clicked();
+
 private:
     std::list<QString>playing_song_path_list_;
     LyricsPlayer* lrc_player;
+    QHotkey *pre_song_hotkey;
+    QHotkey *next_song_hotkey;
+    QHotkey *play_or_pause_hotkey;
+    QHotkey *show_or_hide_lrcwindow_hotkey;
 
 private:
     void _Play();
     void _Pause();
-    void _LoadSong(const QString& song_file_path);
     void __LoadSong(const QString& song_file_path);
+    void __ConnectPreSongHotkey();
+    void __ConnectNextSongHotkey();
+    void __ConnectPlayOrPauseHotkey();
+    void __ConnectShowOrHideLrcWindowHotkey();
 
 private:
+    int __GetTHISTableCount();
     void __init__();
     void __InitConnections();
     void __SetObject();
-    bool _AppendSongToPlayingListWithoutEmitListChanged(const QString& song_path);
+    void __InitNowPlayingSong();
+    bool _AppendSongToPlayingListWithoutEmitListChanged(const QString& song_path,QSqlQuery&q);
     float __GetLastPlayingVolume();
+    void __RandomCurrentPlayingSongPathLists();
 
 private:
     Ui::MP3PlayerColumn *ui;
     QMediaPlayer *mp4_player = nullptr;
-    QVideoWidget* video_widget = nullptr;
+    NVideoWidget* video_widget = nullptr;
     QAudioOutput* audio_outputer = nullptr;
 };
 

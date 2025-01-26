@@ -18,9 +18,9 @@
 
 #define THIS DownloadBiliBiliVideoPage
 
-QString THIS::sessdata_ = "9ca2c32b%2C1752824438%2C93bd9%2A11CjD8YuU0QN4DA1kVydopJ17_6JFjowzi25XqqQ_nfh6TV7AgRTKjogEvNIe3N-mMGlgSVkkwYmcySElYN3Z0YWNrTld6SXBGRTJKSlNSMC1PNkRKbVVOLXZpMHR4a1BycC1SeWlwMVVPcFVmX0lJMjZUazl5a3pEWXFJeDJMMEFIQ2JHVE5neFZ3IIEC";
-QString THIS::bili_jct_ = "db099ceb66eff53e1b4d6cf1e6094e5b";
-QString THIS::buvid3_ = "BEEFEE31-1363-923B-C810-7AD47AD7EAF833413infoc";
+QString THIS::sessdata_ = "";
+QString THIS::bili_jct_ = "";
+QString THIS::buvid3_ = "";
 
 DownloadBiliBiliVideoPage::DownloadBiliBiliVideoPage(QWidget *parent)
     : QWidget(parent)
@@ -46,6 +46,125 @@ void THIS::__init__(){
             this->_DownloadBiliVideo(now_content);
         }
     });
+    _GetDownloadDirPath();
+    _GetSessdata();
+    _GetBili_jct();
+    _GetBuvid3();
+    this->on_ConfirmInputSessdata_clicked();
+    this->on_ConfirmInputBiliJCT_clicked();
+    this->on_ConfirmInputBuvid3_clicked();
+}
+
+void THIS::_GetDownloadDirPath(){
+    ui->InputDownloadDir->setText(download_dir_path());
+}
+
+void THIS::_GetSessdata(){
+    QString ans;
+    auto& db = database;
+    QSqlQuery q(db);
+    QString command = "SELECT sessdata FROM basic_data WHERE id = :id";
+    q.prepare(command);
+    q.bindValue(":id","nmp3");
+    if(!q.exec()){
+        qDebug()<<"command:"<<command;
+        qDebug()<<"error:"<<q.lastError();
+    }else{
+        while(q.next()){
+            ans = q.value("sessdata").toString();
+        }
+    }
+    ui->InputSessdata->setText(ans);
+    this->sessdata_ = ans;
+}
+
+void THIS::_GetBili_jct(){
+    QString ans;
+    auto& db = database;
+    QSqlQuery q(db);
+    QString command = "SELECT bili_jct FROM basic_data WHERE id = :id";
+    q.prepare(command);
+    q.bindValue(":id","nmp3");
+    if(!q.exec()){
+        qDebug()<<"command:"<<command;
+        qDebug()<<"error:"<<q.lastError();
+    }else{
+        while(q.next()){
+            ans = q.value("bili_jct").toString();
+        }
+    }
+    ui->InputBiliJCT->setText(ans);
+    this->bili_jct_ = ans;
+}
+
+void THIS::_GetBuvid3(){
+    QString ans;
+    auto& db = database;
+    QSqlQuery q(db);
+    QString command = "SELECT buvid3 FROM basic_data WHERE id = :id";
+    q.prepare(command);
+    q.bindValue(":id","nmp3");
+    if(!q.exec()){
+        qDebug()<<"command:"<<command;
+        qDebug()<<"error:"<<q.lastError();
+    }else{
+        while(q.next()){
+            ans = q.value("buvid3").toString();
+        }
+    }
+    ui->InputBuvid3->setText(ans);
+    this->buvid3_ = ans;
+}
+
+void THIS::_SaveSessdata(){
+    QString ans = ui->InputSessdata->text();
+    QString command;
+    auto& db = database;
+    QSqlQuery q(db);
+    command = "UPDATE basic_data SET sessdata = :sessdata "
+              "WHERE id = :id";
+    q.prepare(command);
+    q.bindValue(":id","nmp3");
+    q.bindValue(":sessdata", ans);
+    if (!q.exec()) {
+        qDebug() << "command:" + q.lastQuery();
+        qDebug() << " error:" << q.lastError();
+    }
+    this->sessdata_ = ans;
+}
+
+void THIS::_SaveBili_jct(){
+    QString ans = ui->InputBiliJCT->text();
+    QString command;
+    auto& db = database;
+    QSqlQuery q(db);
+    command = "UPDATE basic_data SET bili_jct = :bili_jct "
+              "WHERE id = :id";
+    q.prepare(command);
+    q.bindValue(":id","nmp3");
+    q.bindValue(":bili_jct", ans);
+    if (!q.exec()) {
+        qDebug() << "command:" + q.lastQuery();
+        qDebug() << " error:" << q.lastError();
+    }
+    this->bili_jct_ = ans;
+}
+
+void THIS::_SaveBuvid3(){
+    QString ans = ui->InputBuvid3->text();
+    QString command;
+    auto& db = database;
+    QSqlQuery q(db);
+    command = "UPDATE basic_data SET buvid3 = :buvid3 "
+              "WHERE id = :id";
+    q.prepare(command);
+    q.bindValue(":id","nmp3");
+    q.bindValue(":buvid3", ans);
+    if (!q.exec()) {
+        qDebug() << "command:" + q.lastQuery();
+        qDebug() << " error:" << q.lastError();
+    }
+    this->buvid3_ = ans;
 }
 
 DownloadBiliBiliVideoPage::~DownloadBiliBiliVideoPage()
@@ -57,16 +176,19 @@ DownloadBiliBiliVideoPage::~DownloadBiliBiliVideoPage()
 void DownloadBiliBiliVideoPage::on_ConfirmInputSessdata_clicked()
 {
     sessdata_ = ui->InputSessdata->text();
+    _SaveSessdata();
 }
 
 void DownloadBiliBiliVideoPage::on_ConfirmInputBiliJCT_clicked()
 {
     bili_jct_ = ui->InputBiliJCT->text();
+    _SaveBili_jct();
 }
 
 void DownloadBiliBiliVideoPage::on_ConfirmInputBuvid3_clicked()
 {
     buvid3_ = ui->InputBuvid3->text();
+    _SaveBuvid3();
 }
 
 void THIS::__DownloadBiliVideo(int video_type,const QString& video_url,const QString &target_dir){
@@ -81,7 +203,7 @@ void THIS::__DownloadBiliVideo(int video_type,const QString& video_url,const QSt
 }
 
 void THIS::_DownloadBiliVideo(const QString& download_url){
-    QString download_type = ui->ChooseDownloadType->currentText();
+    QString download_type = ui->ChooseDownloadType->text();
     if(download_type == "MP4"){
         __DownloadBiliVideo(THIS::MP4,download_url,ui->InputDownloadDir->text());
     }else if(download_type == "MP3"){
@@ -190,6 +312,7 @@ void DownloadBiliBiliVideoPage::on_SmallOrBigWidget_clicked()
         timer->setInterval(1);
         connect(timer,&QTimer::timeout,this,[this,timer](){
             this->resize(this->maximumWidth(),this->height());
+            this->move(0,0);
             timer->stop();
             timer->deleteLater();
         });
@@ -213,3 +336,13 @@ void THIS::dropEvent(QDropEvent* e){
 void THIS::dragEnterEvent(QDragEnterEvent *e){
     e->accept();
 }
+
+void DownloadBiliBiliVideoPage::on_ChooseDownloadType_clicked()
+{
+    if(ui->ChooseDownloadType->text() == "MP4"){
+        ui->ChooseDownloadType->setText("MP3");
+    }else{
+        ui->ChooseDownloadType->setText("MP4");
+    }
+}
+

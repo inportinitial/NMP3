@@ -44,6 +44,7 @@ QLabel* THIS::CreateNewLabel(){
 
 void THIS::AddLyrics(QString str){
     QLabel *newlb = CreateNewLabel();
+    newlb->setAlignment(Qt::AlignCenter);
     newlb->setText(str);
     _AddLB2Layout(newlb);
 }

@@ -104,7 +104,11 @@ void DownloadVideoDevice::_DownloadBiliBiliVideo(const QString &download_url,
                                                  const QString &sessdata,
                                                  const QString &bili_jct,
                                                  const QString &buvid3) {
-    QString command = "python DownloadBilibiliVideo.py";
+    QString command;
+    {
+        // command = "python DownloadBilibiliVideo.py";
+        command = "DownloadBilibiliVideo.exe";
+    }
     QStringList list;
     list << "-download_url" << QString('"'+download_url+'"') << "-download_type"
          << "\""+download_type+"\"" << "-sessdata" << "\""+sessdata+

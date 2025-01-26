@@ -60,6 +60,8 @@ private slots:
 
     void on_SmallOrBigWidget_clicked();
 
+    void on_ChooseDownloadType_clicked();
+
 private:
     Ui::DownloadBiliBiliVideoPage *ui;
 
@@ -73,6 +75,13 @@ private:
     void _DownloadBiliVideo(const QString& download_url);
     void __DownloadBiliVideo(int video_type,const QString& video_url,const QString& target_dir);
     void __init__();
+    void _GetDownloadDirPath();
+    void _GetSessdata();
+    void _GetBili_jct();
+    void _GetBuvid3();
+    void _SaveSessdata();
+    void _SaveBili_jct();
+    void _SaveBuvid3();
 
 private:
     QSize pre_widget_size_;

@@ -358,7 +358,7 @@
                <item>
                 <widget class="QLineEdit" name="InputSessdata">
                  <property name="text">
-                  <string>58b6e28f%2C1751974332%2C346c4%2A12CjDwlIHQDhp-znmdJqQM6ao0N2x2Af0STj3MflcLyLJFfWx2jTkKOxUyziOFFhWgLJkSVk9fcUpidENpclNRM0RiejkxUE9hVnBPNDhoRThmRFhmNnVGLTE4RTdhZENsTks0RU9OQjNsRFBhWEJ6SGFkd0xmZmE1a3k1VzBrVlZiQmpnQ2NBbmlRIIEC</string>
+                  <string/>
                  </property>
                 </widget>
                </item>
@@ -391,7 +391,7 @@
                <item>
                 <widget class="QLineEdit" name="InputBiliJCT">
                  <property name="text">
-                  <string>0c3634badf0efb27339ca842c763ddbc</string>
+                  <string/>
                  </property>
                 </widget>
                </item>
@@ -424,7 +424,7 @@
                <item>
                 <widget class="QLineEdit" name="InputBuvid3">
                  <property name="text">
-                  <string>BEEFEE31-1363-923B-C810-7AD47AD7EAF833413infoc</string>
+                  <string/>
                  </property>
                 </widget>
                </item>
@@ -451,6 +451,26 @@
           <horstretch>1</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">#frame_3{
+background:	#696969;
+}
+QObject{
+background : transparent;
+color : white;
+}
+QPushButton{
+background : transparent;
+border : none;
+}
+QPushButton:hover{
+background-color :	#778899;
+}
+QPushButton:pressed{
+background-color :	 #D3D3D3;
+}
+</string>
         </property>
         <property name="frameShape">
          <enum>QFrame::Shape::StyledPanel</enum>
@@ -501,17 +521,10 @@
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="ChooseDownloadType">
-              <item>
-               <property name="text">
-                <string>MP4</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>MP3</string>
-               </property>
-              </item>
+             <widget class="QPushButton" name="ChooseDownloadType">
+              <property name="text">
+               <string>MP4</string>
+              </property>
              </widget>
             </item>
            </layout>
@@ -531,7 +544,7 @@
               <x>0</x>
               <y>0</y>
               <width>395</width>
-              <height>427</height>
+              <height>437</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_7">

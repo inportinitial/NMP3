@@ -1,8 +1,10 @@
 #include "lyricsplayer.h"
 #include "ui_lyricsplayer.h"
+#include<QTimer>
 #include<algorithm>
 #include<QTextStream>
 #include<QFileInfo>
+#include<QDateTime>
 
 #include"lyricsnode.h"
 
@@ -25,6 +27,15 @@ LyricsPlayer::LyricsPlayer(QWidget *parent)
                    (screen_height - this->height()) - 50);
     }
     this->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+    this->setAttribute(Qt::WA_TranslucentBackground);//可以将窗口背景完全透明，键鼠信号优先级最低
+    auto timer = new QTimer(this);
+    timer->setInterval(100);
+    connect(timer,&QTimer::timeout,this,[&](){
+        if(this->underMouse()){
+            this->activateWindow();
+        }
+    });
+    timer->start();
 }
 
 LyricsPlayer::~LyricsPlayer()
@@ -53,6 +64,22 @@ void THIS::SetLyricsFilePath(QString file_path){
 }
 
 void THIS::SyncLyrics(qint64 pos){
+    if(pos == 0){
+        auto t = node_pool.begin();
+        if((*t)->isHidden()){
+            for(int i=0;i<node_pool.size();i++)node_pool[i]->hide();
+            (*t)->show();
+            auto timer = new QTimer;
+            timer->setInterval(0);
+            connect(timer,&QTimer::timeout,this,[&,timer](){
+                this->ResizeToMinSize();
+                timer->stop();
+                timer->deleteLater();
+            });
+            timer->start();
+        }
+        return;
+    }
     auto t = std::lower_bound(node_pool.begin(),node_pool.end(),pos,[](LyricsNode* node,qint64 pos){
         return node->TimeGet() < pos;
     });
@@ -88,6 +115,7 @@ void THIS::_LoadLyricsFromFile(){
         }
     }
     lyrics_file.close();
+    SyncLyrics(0);
 }
 
 LyricsNode* THIS::_CreateNewLyricsNode(qint64 time,QString str){
@@ -99,7 +127,6 @@ LyricsNode* THIS::_CreateNewLyricsNode(qint64 time,QString str){
 }
 
 void THIS::__ReadTimeANDLyrics(const QString& line,qint64 &time,QString &lyrics){
-    qDebug()<<line;
     lyrics = "";
     bool f1,f2,f3;
     int m=0,s=0,ss=0;
