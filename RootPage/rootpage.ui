@@ -215,6 +215,33 @@ b站
           </widget>
          </item>
          <item>
+          <widget class="QPushButton" name="GoToRenameSongPage">
+           <property name="minimumSize">
+            <size>
+             <width>40</width>
+             <height>100</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>40</width>
+             <height>100</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>音频
+视频
+重新
+命名</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <spacer name="verticalSpacer">
            <property name="orientation">
             <enum>Qt::Orientation::Vertical</enum>

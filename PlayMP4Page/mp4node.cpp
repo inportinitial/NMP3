@@ -32,9 +32,20 @@ void THIS::_SetSongFilePath(QString song_path){
 void THIS::mouseDoubleClickEvent(QMouseEvent* e){
     if(this->underMouse() && e->button() == Qt::LeftButton){
         mp3_player_column->JumpToSong(this->song_file_path());
+        mp3_player_column->Play();
     }
 }
 
 QString THIS::song_file_path(){
     return song_file_path_;
+}
+
+void MP4Node::on_RemoveSongFromLists_clicked() {
+    emit DeleteButtionClicked();
+    mp3_player_column->RemoveSongsFromPlayingList({this->song_file_path()});
+    this->deleteLater();
+}
+
+void MP4Node::DeleteThis(){
+    on_RemoveSongFromLists_clicked();
 }

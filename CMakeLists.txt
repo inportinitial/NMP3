@@ -52,6 +52,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         DownloadBiliBiliVideoPage/downloadbilibilivideonode.h DownloadBiliBiliVideoPage/downloadbilibilivideonode.cpp DownloadBiliBiliVideoPage/downloadbilibilivideonode.ui
         images.qrc
         MP3PlayerColumn/LyricsPlayer/lyricsnode.cpp MP3PlayerColumn/LyricsPlayer/lyricsnode.h MP3PlayerColumn/LyricsPlayer/lyricsnode.ui MP3PlayerColumn/LyricsPlayer/lyricsplayer.cpp MP3PlayerColumn/LyricsPlayer/lyricsplayer.h MP3PlayerColumn/LyricsPlayer/lyricsplayer.ui
+        RenameSongPage/renamesongpage.h RenameSongPage/renamesongpage.cpp RenameSongPage/renamesongpage.ui
+        NVideoWidget/nvideowidget.h NVideoWidget/nvideowidget.cpp
     )
 
 # Define target properties for Android with Qt 6 as:
@@ -72,12 +74,14 @@ else()
     endif()
 endif()
 
+add_subdirectory(QHotkey)
+
 target_include_directories(NMP3 PUBLIC
 ${CMAKE_CURRENT_SOURCE_DIR}/MP3PlayerColumn/include
 ${CMAKE_CURRENT_SOURCE_DIR}/PlayMP4Page/include
 )
 
-target_link_libraries(NMP3 PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(NMP3 PRIVATE Qt${QT_VERSION_MAJOR}::Widgets QHotkey::QHotkey)
 target_link_libraries(NMP3 PUBLIC Qt6::Sql)
 target_link_libraries(NMP3 PRIVATE Qt6::Multimedia)
 target_link_libraries(NMP3 PRIVATE Qt6::MultimediaWidgets)

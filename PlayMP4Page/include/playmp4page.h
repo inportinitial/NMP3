@@ -9,6 +9,8 @@
 #include<QMoveEvent>
 #include<QPaintEvent>
 
+class NVideoWidget;
+
 namespace Ui {
 class PlayMP4Page;
 }
@@ -22,6 +24,11 @@ public:
     ~PlayMP4Page();
     void AddSong();
     void DropEvent(QDropEvent* e){ dropEvent(e); }
+    void TakeOffNVideoWidget();
+    void AddNVideoWidget(NVideoWidget* widget);
+
+private slots:
+    void on_ClearNowPlayingSongList_clicked();
 
 private:
     void __init__();

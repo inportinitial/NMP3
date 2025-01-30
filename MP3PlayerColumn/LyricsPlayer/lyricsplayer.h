@@ -1,6 +1,7 @@
 #ifndef LYRICSPLAYER_H
 #define LYRICSPLAYER_H
 
+#include<QEnterEvent>
 #include <QWidget>
 #include<QMouseEvent>
 #include<QString>

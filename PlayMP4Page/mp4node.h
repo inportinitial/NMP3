@@ -17,6 +17,13 @@ public:
     explicit MP4Node(QString song_file_path,QWidget *parent = nullptr);
     ~MP4Node();
     QString song_file_path();
+    void DeleteThis();
+
+signals:
+    void DeleteButtionClicked();
+
+private slots:
+    void on_RemoveSongFromLists_clicked();
 
 private:
     Ui::MP4Node *ui;

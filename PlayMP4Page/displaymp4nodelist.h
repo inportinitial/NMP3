@@ -21,6 +21,12 @@ public:
     ~DisplayMP4NodeList();
 
     void SetPlayMP4Page(QWidget* play_mp4_page){ play_mp4_page_ = play_mp4_page; }
+    void AppendSong(const QString& song_path);
+    void RemoveAllSongFromNowPlayingList();
+
+signals:
+    void GUIBeingUpdated();
+    void GUIUpdateEnded();
 
 private:
     Ui::DisplayMP4NodeList *ui;
@@ -36,6 +42,12 @@ private:
     void resizeEvent(QResizeEvent* e)override;
     void dropEvent(QDropEvent* e)override;
     void dragEnterEvent(QDragEnterEvent* e)override;
+
+private:
+    //用来记录被删掉的歌曲的数量，用来防止每一次删除都重新获取播放队列把页面重新刷新一遍
+    int deleted_count_ = 0;
+    //同上
+    int append_count_ = 0;
 };
 
 #endif // DISPLAYMP4NODELIST_H

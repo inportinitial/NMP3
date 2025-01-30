@@ -13,6 +13,7 @@
 #include<QFile>
 
 #include"mp3playercolumn.h"
+#include"../NVideoWidget/nvideowidget.h"
 
 #define THIS PlayMP4Page
 
@@ -30,6 +31,7 @@ void THIS::__init__(){
     this->setAcceptDrops(1);
     ui->ShowMVOrLrcArea->layout()->addWidget(mp3_player_column->GetVideoWidget());
     mp3_player_column->GetVideoWidget()->setVisible(1);
+    mp3_player_column->GetVideoWidget()->SetPlayMP4Page(this);
     ui->frame_2->layout()->takeAt(1);
     ui->display_mp4_node_list->setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
     //display_..._list初始化的一部分
@@ -41,7 +43,14 @@ void THIS::__init__(){
     connect(timer2, &QTimer::timeout, this, [timer2, this]() {
         auto timer = new QTimer(this);
         timer->setInterval(100);
+        //控制鼠标靠近和远离歌曲列表 歌曲列表的隐藏和显示逻辑
         connect(timer, &QTimer::timeout, this, [timer, this]() {
+            if(!mp3_player_column->isVisible()){
+                if(ui->display_mp4_node_list->isVisible()){
+                    ui->display_mp4_node_list->setVisible(0);
+                }
+                return;
+            }
             QPoint p = QCursor::pos();
             auto pos = ui->display_mp4_node_list->pos();
             // auto pos = this->mapToGlobal(ui->display_mp4_node_list->pos());
@@ -77,6 +86,7 @@ void THIS::__init__(){
         auto timer4 = new QTimer(this);
         timer4->setInterval(100);
         connect(timer4, &QTimer::timeout, this, [&]() {
+            if(!mp3_player_column->isVisible())return;
             ui->display_mp4_node_list->resize(ui->ShowMVOrLrcArea->width() / 8 *
                                                   3,
                                               ui->ShowMVOrLrcArea->height());
@@ -148,3 +158,17 @@ void THIS::paintEvent(QPaintEvent* e){
     ui->display_mp4_node_list->move(this->mapToGlobal(p));
     //===
 }
+
+void THIS::TakeOffNVideoWidget(){
+    ((QVBoxLayout*)ui->ShowMVOrLrcArea->layout())->takeAt(0);
+}
+
+void THIS::AddNVideoWidget(NVideoWidget* widget){
+    ui->ShowMVOrLrcArea->layout()->addWidget(widget);
+}
+
+void PlayMP4Page::on_ClearNowPlayingSongList_clicked()
+{
+    ui->display_mp4_node_list->RemoveAllSongFromNowPlayingList();
+}
+

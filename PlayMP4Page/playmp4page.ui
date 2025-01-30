@@ -104,13 +104,24 @@
          </sizepolicy>
         </property>
         <property name="styleSheet">
-         <string notr="true">QObject{
+         <string notr="true">#display_mp4_node_list{
+background:	#696969;
+}
+QObject{
 background : transparent;
 color : white;
 }
-#display_mp4_node_list{
-background:	#696969;
-}</string>
+QPushButton{
+background : transparent;
+border : none;
+}
+QPushButton:hover{
+background-color :	#778899;
+}
+QPushButton:pressed{
+background-color :	 #D3D3D3;
+}
+</string>
         </property>
        </widget>
       </item>
@@ -177,6 +188,13 @@ background:	#696969;
        <widget class="QPushButton" name="FullSreen">
         <property name="text">
          <string>全屏显示</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="ClearNowPlayingSongList">
+        <property name="text">
+         <string>清空当前播放队列</string>
         </property>
        </widget>
       </item>
