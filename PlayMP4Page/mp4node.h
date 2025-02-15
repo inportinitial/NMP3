@@ -4,6 +4,7 @@
 #include <QWidget>
 #include<QString>
 #include<QMouseEvent>
+#include<QLabel>
 
 namespace Ui {
 class MP4Node;
@@ -18,6 +19,8 @@ public:
     ~MP4Node();
     QString song_file_path();
     void DeleteThis();
+    void SetIfHandleInputMessage(bool f);
+    void SetDisplayedMessageWhenHandleInputMessageUnabled(const QString& s);
 
 signals:
     void DeleteButtionClicked();
@@ -28,6 +31,8 @@ private slots:
 private:
     Ui::MP4Node *ui;
     QString song_file_path_;
+    bool if_handle_input_message_ = 1;
+    QLabel* show_message_when_handle_input_message_unabled_;
 
 private:
     void _SetSongFilePath(QString song_path);

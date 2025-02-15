@@ -7,6 +7,7 @@
 #include<QResizeEvent>
 #include<QDropEvent>
 #include<QDragEnterEvent>
+#include<QTimer>
 
 namespace Ui {
 class DisplayMP4NodeList;
@@ -23,14 +24,22 @@ public:
     void SetPlayMP4Page(QWidget* play_mp4_page){ play_mp4_page_ = play_mp4_page; }
     void AppendSong(const QString& song_path);
     void RemoveAllSongFromNowPlayingList();
+    void SetNodeUnabled(const QString& song_file_path,const QString& displayed_messgae);
+    void SetNodeAbled(const QString& song_file_path);
 
 signals:
     void GUIBeingUpdated();
     void GUIUpdateEnded();
 
+private slots:
+    void on_ConfirmSeachInput_clicked();
+
+    void on_InputSearch_returnPressed();
+
 private:
     Ui::DisplayMP4NodeList *ui;
     QWidget* play_mp4_page_;
+    QTimer* update_node_list_timer_;
 
 private:
     void __InitConnections();

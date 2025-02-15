@@ -37,16 +37,21 @@ void THIS::__init__(){
     emit ui->GoToHomePage->clicked();
 }
 
+
+
 void THIS::__SetHotkey(){
     systemTraySet_hotkey_->setShortcut(QKeySequence("Ctrl+Shift+Q"),1);
     connect(systemTraySet_hotkey_,&QHotkey::activated,this,[&](){
         if(this->isVisible()){
             // systemTrayIcon->setIcon(QIcon(":/images/images/icon.png"));
-            this->setVisible(0);
-            system_tray_icon_->show();
+            this->hide();
         }else{
-            this->setVisible(1);
-            system_tray_icon_->hide();
+            if(mp3_player_column->GetVideoWidget()->isFullScreen()){
+                mp3_player_column->GetVideoWidget()->UnfullScreenShow();
+                this->hide();
+            }else{
+                this->show();
+            }
         }
     });
 }
@@ -141,3 +146,21 @@ void RootPage::on_GoToRenameSongPage_clicked()
     ChangeToPage(RENAME_SONG_PAGE);
 }
 
+void THIS::show(){
+    QWidget::setVisible(1);
+    system_tray_icon_->hide();
+}
+
+void THIS::hide(){
+    QWidget::setVisible(0);
+    system_tray_icon_->show();
+}
+
+void THIS::setVisible(bool f){
+    if(f){
+        this->show();
+    }else{
+        this->hide();
+    }
+
+}

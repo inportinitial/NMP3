@@ -27,6 +27,10 @@ public:
 public:
     explicit RootPage(QWidget *parent = nullptr);
     ~RootPage();
+    void show();
+    void hide();
+    void setVisible(bool f);
+
 
 private slots:
     void on_GoToHomePage_clicked();

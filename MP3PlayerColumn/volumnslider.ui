@@ -14,7 +14,10 @@
    <string>Form</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">background:	#696969;</string>
+   <string notr="true">#VolumnSlider{
+border-radius: 30px; 
+background:	#696969;
+}</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">

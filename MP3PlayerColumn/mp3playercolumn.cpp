@@ -1,6 +1,7 @@
 #include "mp3playercolumn.h"
 #include "ui_mp3playercolumn.h"
 
+#include<QProcess>
 #include<random>
 #include<QApplication>
 #include<algorithm>
@@ -190,6 +191,10 @@ void THIS::Play(){
 }
 
 void THIS::_LoadSong(const QString& song_file_path){
+    QFileInfo f(song_file_path);
+    if(!IfSongPlayedAbled(f.absoluteFilePath())){
+        return;
+    }
     if(mp4_player->isPlaying()){
         mp4_player->pause();
         __LoadSong(song_file_path);
@@ -506,11 +511,15 @@ void MP3PlayerColumn::on_ProgressBar_sliderReleased()
 
 void MP3PlayerColumn::on_AdjustVolume_clicked()
 {
+    is_changing_volume_ = 1;
     VolumnSlider *vs = new VolumnSlider();
     vs->show();
     vs->SetVolumn(mp4_player->audioOutput()->volume());
     connect(vs,&VolumnSlider::VolumnChanged,this,[&,vs,this](){
         this->ChangeVolumn(vs->GetVolumn());
+    });
+    connect(vs,&QWidget::destroyed,this,[&](){
+        is_changing_volume_ = 0;
     });
 }
 
@@ -685,4 +694,316 @@ void THIS::__RandomCurrentPlayingSongPathLists(){
     this->Play();
 
     emit PlayingSongListChanged();
+}
+
+bool THIS::is_changing_volume(){
+    return is_changing_volume_;
+}
+
+void THIS::AdjustNowPlayingSongFileVolumeByPercentage(int percentage){
+    QFileInfo info(this->mp4_player->source().toString());
+    if(!info.exists())return;
+    if(this->NowPlayingSongPathLists().size() >= 2) this->PlayNextSong();
+    else mp4_player->setSource(QUrl());
+    _AdjustSongFileVolumeByPercentage(info.absoluteFilePath(),percentage);
+}
+
+void THIS::AdjustNowPlayingSongFileVolumeBy_dB(int dB){
+    QFileInfo info(this->mp4_player->source().toString());
+    if(!info.exists())return;
+    if(this->NowPlayingSongPathLists().size() >= 2) this->PlayNextSong();
+    else mp4_player->setSource(QUrl());
+    _AdjustSongFileVolumeBy_dB(info.absoluteFilePath(),dB);
+}
+
+void THIS::_AdjustSongFileVolumeByPercentage(const QString& song_file_path,int percentage){
+    QFileInfo f(song_file_path);
+    if(!f.exists())return;
+    SetSongPlayedAbled(f.absoluteFilePath(),0);
+    // 创建QProcess对象
+    QProcess *process = new QProcess;
+
+    QString command;
+    if(f.suffix() == "mp4"){
+        QStringList *list_command = new QStringList;
+        //从视频文件中提取音频
+        QString original_file_path = f.absoluteFilePath();
+        QString output_audio_name = "audio_"+f.fileName().chopped(f.suffix().size()+1)+".mp3";
+        QString final_audio_name = "result_"+f.fileName().chopped(f.suffix().size()+1)+".mp3";
+        QString final_file_name = "result_"+f.fileName().chopped(f.suffix().size()+1)+".mp4";
+        QStringList part_list;
+        part_list <<"-i" << "\"" + original_file_path + "\""
+                  << "-q:a 0" << "-map a" << "\"" + output_audio_name + "\"";
+        command = "ffmpeg";
+        for(const auto& t : part_list){
+            command+=" "+t;
+        }
+        *list_command << command;
+        //对音频进行音量操作
+        part_list.clear();
+        part_list << "-i" << "\"" + output_audio_name + "\"" << "-af"
+                  << "volume=" + QString::number(percentage*1.0/100)
+                  << "\"" + final_audio_name + "\"";
+        command = "ffmpeg";
+        for(const auto& t : part_list){
+            command+=" "+t;
+        }
+        *list_command << command;
+        //将音频结果和原视频融合
+        part_list.clear();
+        part_list << "-i" << "\"" + original_file_path + "\"" << "-i"
+                  << "\"" + final_audio_name + "\""
+                  << "-c:v copy -map 0:v:0 -map 1:a:0 -shortest"
+                  << "\"" + final_file_name + "\"";
+        command = "ffmpeg";
+        for(const auto& t : part_list){
+            command+=" "+t;
+        }
+        *list_command << command;
+        //执行以上指令
+        connect(process, &QProcess::finished, this,
+                [&,f,original_file_path, output_audio_name, final_audio_name,
+                                                     final_file_name,list_command,process]() {
+            if (list_command->size()) {
+                auto command = list_command->front();
+                qDebug()<<qPrintable(command);
+                list_command->pop_front();
+                process->startCommand(command);
+            } else {
+                QFile::remove(output_audio_name);
+                QFile::remove(final_audio_name);
+                QFileInfo info(final_file_name);
+                if(info.exists()){
+                    QFile::remove(original_file_path);
+                    QFile::copy(info.absoluteFilePath(),original_file_path);
+                }
+                QFile::remove(final_file_name);
+                process->deleteLater();
+                SetSongPlayedAbled(f.absoluteFilePath(),1);
+                emit this->AdjustSongFileVolumeDone();
+            }
+        });
+        auto command = list_command->front();
+        list_command->pop_front();
+        process->startCommand(command);
+        qDebug()<<qPrintable(command);
+    }else if(f.suffix() == "mp3"){
+        QString original_file_path = f.absoluteFilePath();
+        QString final_audio_name = "result_"+f.fileName().chopped(f.suffix().size()+1)+".mp3";
+        command = QString() + "ffmpeg -i" + " " + "\"" + original_file_path +
+                  "\"" + " " + "volume=" + QString::number(percentage*1.0/100) + " " +
+                  "\"" + final_audio_name + "\"";
+        connect(process, &QProcess::finished, this,
+                [f,process, this, original_file_path, final_audio_name]() {
+            QFile::remove(original_file_path);
+            QFile::copy(final_audio_name, original_file_path);
+            QFile::remove(final_audio_name);
+            process->deleteLater();
+            SetSongPlayedAbled(f.absoluteFilePath(),1);
+            emit this->AdjustSongFileVolumeDone();
+        });
+        process->startCommand(command);
+    }
+
+    process->startCommand(command);
+    connect(process,&QProcess::errorOccurred,this,[&,process](){
+        qDebug()<<qPrintable(process->errorString());
+    });
+    connect(process,&QProcess::readyReadStandardOutput,this,[&,process](){
+        qDebug()<<qPrintable(process->readAllStandardOutput());
+    });
+    connect(process,&QProcess::readyReadStandardError,this,[&,process](){
+        qDebug()<<qPrintable(process->readAllStandardError());
+    });
+}
+
+void THIS::_AdjustSongFileVolumeBy_dB(const QString& song_file_path,int dB){
+    QFileInfo f(song_file_path);
+    if(!f.exists())return;
+    SetSongPlayedAbled(f.absoluteFilePath(),0);
+    // 创建QProcess对象
+    QProcess *process = new QProcess;
+
+    QString command;
+    if(f.suffix() == "mp4"){
+        //从视频文件中提取音频
+        QStringList *list_command = new QStringList;
+        QString original_file_path = f.absoluteFilePath();
+        QString output_audio_name = "audio_"+f.fileName().chopped(f.suffix().size()+1)+".mp3";
+        QString final_audio_name = "result_"+f.fileName().chopped(f.suffix().size()+1)+".mp3";
+        QString final_file_name = "result_"+f.fileName().chopped(f.suffix().size()+1)+".mp4";
+        QStringList part_list;
+        part_list <<"-i" << "\"" + original_file_path + "\""
+                  << "-q:a 0" << "-map a" << "\"" + output_audio_name + "\"";
+        command = "ffmpeg";
+        for(const auto& t : part_list){
+            command+=" "+t;
+        }
+        *list_command << command;
+        //对音频进行音量操作
+        part_list.clear();
+        part_list << "-i" << "\"" + output_audio_name + "\"" << "-af"
+                  << "volume=" + QString::number(dB) + "dB"
+                  << "\"" + final_audio_name + "\"";
+        command = "ffmpeg";
+        for(const auto& t : part_list){
+            command+=" "+t;
+        }
+        *list_command << command;
+        //将音频结果和原视频融合
+        part_list.clear();
+        part_list << "-i" << "\"" + original_file_path + "\"" << "-i"
+                  << "\"" + final_audio_name + "\""
+                  << "-c:v copy -map 0:v:0 -map 1:a:0 -shortest"
+                  << "\"" + final_file_name + "\"";
+        command = "ffmpeg";
+        for(const auto& t : part_list){
+            command+=" "+t;
+        }
+        *list_command << command;
+        //执行以上指令
+        connect(process, &QProcess::finished, this,
+                [&, f,original_file_path, output_audio_name, final_audio_name,
+                                                     final_file_name,list_command,process]() {
+            if (list_command->size()) {
+                auto command = list_command->front();
+                qDebug()<<qPrintable(command);
+                list_command->pop_front();
+                process->startCommand(command);
+            } else {
+                QFile::remove(output_audio_name);
+                QFile::remove(final_audio_name);
+                QFileInfo info(final_file_name);
+                if(info.exists()){
+                    QFile::remove(original_file_path);
+                    QFile::copy(info.absoluteFilePath(),original_file_path);
+                }
+                QFile::remove(final_file_name);
+                process->deleteLater();
+                SetSongPlayedAbled(f.absoluteFilePath(),1);
+                emit this->AdjustSongFileVolumeDone();
+            }
+        });
+        auto command = list_command->front();
+        list_command->pop_front();
+        process->startCommand(command);
+        qDebug()<<qPrintable(command);
+    }else if(f.suffix() == "mp3"){
+        QString original_file_path = f.absoluteFilePath();
+        QString final_audio_name = "result_"+f.fileName().chopped(f.suffix().size()+1)+".mp3";
+        command = QString() + "ffmpeg -i" + " " + "\"" + original_file_path +
+                  "\"" + " " + "volume=" + QString::number(dB) + "dB" + " " +
+                  "\"" + final_audio_name + "\"";
+        connect(process, &QProcess::finished, this,
+                [f,process, this, original_file_path, final_audio_name]() {
+            QFile::remove(original_file_path);
+            QFile::copy(final_audio_name, original_file_path);
+            QFile::remove(final_audio_name);
+            process->deleteLater();
+            SetSongPlayedAbled(f.absoluteFilePath(),1);
+            emit this->AdjustSongFileVolumeDone();
+        });
+        process->startCommand(command);
+    }
+
+    process->startCommand(command);
+    connect(process,&QProcess::errorOccurred,this,[&,process](){
+        qDebug()<<qPrintable(process->errorString());
+    });
+    connect(process,&QProcess::readyReadStandardOutput,this,[&,process](){
+        qDebug()<<qPrintable(process->readAllStandardOutput());
+    });
+    connect(process,&QProcess::readyReadStandardError,this,[&,process](){
+        qDebug()<<qPrintable(process->readAllStandardError());
+    });
+}
+
+void THIS::SetSongPlayedAbled(const QString& song_file_path,bool f){
+    auto& M = map_song_played_unabled_;
+    if(f){
+        if(M.find(song_file_path) != M.end()){
+            M.erase(song_file_path);
+        }
+    }else{
+        M[song_file_path] = 1;
+    }
+}
+
+bool THIS::IfSongPlayedAbled(const QString&& song_file_path){
+    auto& M = map_song_played_unabled_;
+    return (M.find(song_file_path) == M.end());
+}
+
+void THIS::DeleteTheFirstSecondsOfNowPlayingSong(double second){
+    QString song_path = NowPlayingSongPath();
+    this->_LoadSong("");
+    _DeleteTheFirstSecondsOfSong(song_path,second);
+    this->_LoadSong(song_path);
+}
+
+void THIS::DeleteTheLastSecondsOfNowPlayingSong(double second){
+    QString song_path = NowPlayingSongPath();
+    this->_LoadSong("");
+    _DeleteTheLastSecondsOfSong(song_path,second);
+    this->_LoadSong(song_path);
+}
+
+void THIS::_DeleteTheFirstSecondsOfSong(const QString& song_path,double second){
+    QFileInfo f(song_path);
+    if(!f.exists())return;
+    QString final_file_name = QString("result_")+f.fileName();
+    QProcess p;
+    QString command;
+    command = QString() + "ffmpeg -i " + "\"" + f.absoluteFilePath() + "\"" +
+              " -ss " + QString::number(second) + " -c copy " + "\""+final_file_name+"\""+" -y";
+    connect(&p,&QProcess::readyReadStandardError,this,[&](){
+        qDebug()<<qPrintable(p.errorString());
+    });
+    p.startCommand(command);
+    qDebug()<<command;
+    p.waitForFinished();
+    QFileInfo info(final_file_name);
+    if(info.exists()){
+        QFile::remove(f.absoluteFilePath());
+        QFile::copy(info.absoluteFilePath(),f.absoluteFilePath());
+        QFile::remove(info.absoluteFilePath());
+    }
+}
+
+void THIS::_DeleteTheLastSecondsOfSong(const QString& song_path,double second){
+    QFileInfo f(song_path);
+    if(!f.exists())return;
+    QMediaPlayer m;
+    m.setSource(f.absoluteFilePath());
+    QEventLoop loop;
+    QObject::connect(&m, &QMediaPlayer::mediaStatusChanged, [&loop](QMediaPlayer::MediaStatus status) {
+        if (status == QMediaPlayer::LoadedMedia) {
+            loop.quit();
+        }
+    });
+    loop.exec();
+    int duration = m.duration();
+    qDebug()<<duration;
+    m.setSource(QUrl(""));
+    m.deleteLater();
+    QString final_file_name = QString("result_")+f.fileName();
+    QProcess p;
+    QString command;
+    command = QString() + "ffmpeg -i " + "\"" + f.absoluteFilePath() + "\"" +
+              " -t " + QString::number(1.0*duration/1000-second) + " -c copy " + "\""+final_file_name+"\""+" -y";
+    connect(&p,&QProcess::readyReadStandardError,this,[&](){
+        qDebug()<<qPrintable(p.errorString());
+    });
+    connect(&p,&QProcess::readyReadStandardOutput,this,[&](){
+        qDebug()<<qPrintable(p.errorString());
+    });
+    qDebug()<<qPrintable(command);
+    p.startCommand(command);
+    p.waitForFinished();
+    QFileInfo info(final_file_name);
+    if(info.exists()){
+        QFile::remove(f.absoluteFilePath());
+        QFile::copy(info.absoluteFilePath(),f.absoluteFilePath());
+        QFile::remove(info.absoluteFilePath());
+    }
 }

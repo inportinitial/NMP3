@@ -11,6 +11,7 @@
 #include<QVideoWidget>
 #include<list>
 #include<QSqlQuery>
+#include<map>
 #include"../LyricsPlayer/lyricsplayer.h"
 #include"../../NVideoWidget/nvideowidget.h"
 
@@ -19,6 +20,8 @@ namespace Ui {
 class MP3PlayerColumn;
 }
 QT_END_NAMESPACE
+
+class MP4Node;
 
 class MP3PlayerColumn : public QWidget
 {
@@ -42,11 +45,19 @@ public:
     NVideoWidget* GetVideoWidget();
     void ClickPauseOrPlay();
     void _LoadSong(const QString& song_file_path);
+    bool is_changing_volume();
+    void AdjustNowPlayingSongFileVolumeByPercentage(int percentage);
+    void AdjustNowPlayingSongFileVolumeBy_dB(int dB);
+    void SetSongPlayedAbled(const QString& song_file_path,bool f);
+    bool IfSongPlayedAbled(const QString&& song_file_path);
+    void DeleteTheFirstSecondsOfNowPlayingSong(double second);
+    void DeleteTheLastSecondsOfNowPlayingSong(double second);
 
 signals:
     void NowPlayingSongChanged();
     void SongPlayingProgressChanged();
     void PlayingSongListChanged();
+    void AdjustSongFileVolumeDone();
 
 private slots:
     void on_PreSong_clicked();
@@ -62,7 +73,9 @@ private slots:
     void on_RandomCurrentPlayingList_clicked();
 
 private:
+    bool is_changing_volume_ = 0;
     std::list<QString>playing_song_path_list_;
+    std::map<QString,bool>map_song_played_unabled_;
     LyricsPlayer* lrc_player;
     QHotkey *pre_song_hotkey;
     QHotkey *next_song_hotkey;
@@ -79,6 +92,11 @@ private:
     void __ConnectShowOrHideLrcWindowHotkey();
 
 private:
+    MP4Node* GetNode(const QString& song_file_path);
+    void _AdjustSongFileVolumeByPercentage(const QString& song_file_path,int percentage);
+    void _AdjustSongFileVolumeBy_dB(const QString& song_file_path,int dB);
+    void _DeleteTheFirstSecondsOfSong(const QString& song_path,double second);
+    void _DeleteTheLastSecondsOfSong(const QString& song_path,double second);
     int __GetTHISTableCount();
     void __init__();
     void __InitConnections();

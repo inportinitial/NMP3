@@ -11,6 +11,7 @@ VolumnSlider::VolumnSlider(QWidget *parent)
     , ui(new Ui::VolumnSlider)
 {
     ui->setupUi(this);
+
     QPoint global_pos = QCursor::pos();
     QPoint localPos = mapFromGlobal(global_pos);
     this->move(localPos.x()-this->width()/2,localPos.y()-this->height()+10);
@@ -28,6 +29,7 @@ VolumnSlider::VolumnSlider(QWidget *parent)
     timer->start();
 
     slider_ = new VolumnSlider_Private(this);
+    slider_->setAttribute(Qt::WA_TranslucentBackground);//可以将窗口背景完全透明，键鼠信号优先级最低
     ui->verticalLayout->addWidget(slider_);
     connect(slider_,&VolumnSlider_Private::sliderReleased,this,[this](){
         emit this->VolumnChanged();
